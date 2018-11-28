@@ -17,7 +17,7 @@ plt.axis([0, 10, 0, 10])
 for i in range(1000):
   x = np.random.random()*10
   y = np.random.random()*10
-  plt.scatter(x, y)
+  plt.scatter(x, y) 
   plt.pause(0.05)
 
 plt.show()
