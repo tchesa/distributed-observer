@@ -19,23 +19,28 @@ import threading
 
 class Client:
   sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  port = 8080
+  server = ('127.0.0.1', 5000)
+  shutdown = False
 
   def sendMsg(self):
-    while True:
-      self.sock.send(input('-> ').encode('utf8'))
+    while not self.shutdown:
+      self.shutdown = input('exit (y/n)? ') == "y"
+    # self.sock.close()
 
   def __init__(self, address):
-    self.sock.connect((address, self.port))
+    self.sock.connect(self.server)
 
     t = threading.Thread(target=self.sendMsg)
     t.daemon = True
     t.start()
 
-    while True:
-      data = self.sock.recv(1024)
-      if not data:
-        break
-      print(data.decode('utf8'))
+    while not self.shutdown:
+      try:
+        data = self.sock.recv(1024)
+        if not data:
+          break
+        print(data.decode('utf8'))
+      except:
+        print('error')
 
 client = Client('127.0.0.1')
