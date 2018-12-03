@@ -49,27 +49,42 @@ import socket
 import threading
 import pickle
 from message import Message
+import sys
 
-host = '127.0.0.1'
-port = 5000
+class Client:
+  host = '127.0.0.1'
+  port = 5000
+  sock = socket.socket()
 
-def send(sock):
-  message = input(': ')
-  while True:
-    sock.send(message.encode('utf8'))
+  def __init__(self, host, port):
+    self.host = host
+    self.port = port
+
+  def send(self, sock):
     message = input(': ')
+    while True:
+      self.sock.send(message.encode('utf8'))
+      message = input(': ')
 
-sock = socket.socket()
-sock.connect((host, port))
+  def run(self):
+    self.sock.connect((self.host, self.port))
 
-sThread = threading.Thread(target=send, args=(sock,))
-sThread.daemon = True
-sThread.start()
+    sThread = threading.Thread(target=self.send, args=(self.sock,))
+    sThread.daemon = True
+    sThread.start()
 
-while True:
-  data = sock.recv(1024)
-  if not data:
-    print('server disconnected')
-    break
-  received = pickle.loads(data)
-  print(received)
+    while True:
+      data = self.sock.recv(1024)
+      if not data:
+        print('server disconnected')
+        break
+      print(len(data))
+      received = pickle.loads(data)
+      print(received, '({} bytes)'.format(len(data)))
+
+def main(argv):
+  client = Client(argv[0], int(argv[1]))
+  client.run()
+
+if __name__ == '__main__':
+  main(sys.argv[1:])

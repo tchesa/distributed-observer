@@ -1,7 +1,9 @@
 
+from pickle import dumps
+
 class Message:
   header = ''
-  body = ''
+  body = any
 
   def __init__(self, head, body):
     self.header = head
@@ -9,3 +11,6 @@ class Message:
 
   def __str__(self):
     return '{}: {}'.format(self.header, self.body)
+
+  def encode(self):
+    return dumps(self)
