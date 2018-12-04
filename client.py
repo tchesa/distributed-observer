@@ -50,6 +50,7 @@ import threading
 import pickle
 from message import Message
 import sys
+import uuid
 
 class Client:
   host = '127.0.0.1'
