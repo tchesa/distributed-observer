@@ -49,13 +49,17 @@ import socket
 import threading
 import pickle
 from message import Message
+from point import Point
 import sys
 import uuid
+import numpy as np
+import matplotlib.pyplot as plt
 
 class Client:
   host = '127.0.0.1'
   port = 5000
   sock = socket.socket()
+  points = []
 
   def __init__(self, host, port):
     self.host = host
@@ -67,12 +71,26 @@ class Client:
       self.sock.send(message.encode('utf8'))
       message = input(': ')
 
+  def render(self):
+    plt.axis([0, 10, 0, 10])
+    plt.show()
+    print('shown')
+    while True:
+      for point in self.points:
+        plt.scatter(point.x, point.y, c=point.c)
+      plt.pause(0.05)
+      plt.clf()
+
   def run(self):
     self.sock.connect((self.host, self.port))
 
     sThread = threading.Thread(target=self.send, args=(self.sock,))
     sThread.daemon = True
     sThread.start()
+
+    rThread = threading.Thread(target=self.render)
+    rThread.daemon = True
+    rThread.start()
 
     while True:
       data = self.sock.recv(1024)
@@ -82,6 +100,8 @@ class Client:
       print(len(data))
       received = pickle.loads(data)
       print(received, '({} bytes)'.format(len(data)))
+      if received.header == 'newFrame':
+        self.points += received.body
 
 def main(argv):
   client = Client(argv[0], int(argv[1]))

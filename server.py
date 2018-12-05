@@ -51,6 +51,11 @@ from message import Message
 import pickle
 import sys
 import uuid
+import numpy as np
+import matplotlib._color_data as mcd
+import random
+from point import Point
+import time
 
 class Server:
   host = '127.0.0.1'
@@ -94,6 +99,24 @@ class Server:
         # encoded = pickle.dumps(message)
         # connection.send(encoded)
 
+  def generatePoint(self):
+    x = np.random.random()*10
+    y = np.random.random()*10
+    c = list(mcd.CSS4_COLORS.keys())[random.randrange(len(mcd.CSS4_COLORS.keys()))]
+    return Point(x, y, c)
+
+  def generateFrame(self):
+    input('press any key to start to generate frames')
+    maxPoints = 10
+    while True:
+      points = []
+      while len(points) < maxPoints:
+        points.append(self.generatePoint())
+        print('point generated')
+        time.sleep(1)
+      print('send frame')
+      self.notifyAll(Message('newFrame', points))
+
   def run(self):
     if (not self.isMaster): # listen to MASTER updates
       print(self.servers)
@@ -116,13 +139,17 @@ class Server:
         self.servers.pop(0)
 
     # start master work
+    fThread = threading.Thread(target=self.generateFrame)
+    fThread.daemon = True
+    fThread.start()
+
     self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     self.sock.bind((self.host, self.port))
     print('listening on {}:{}'.format(self.host, self.port))
     self.sock.listen(1)
 
     while True:
-      c, a = self.sock.accept()
+      c,a = self.sock.accept()
       cThread = threading.Thread(target=self.handler, args=(c, a))
       cThread.daemon = True
       cThread.start()
