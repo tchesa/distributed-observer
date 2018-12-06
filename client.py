@@ -73,13 +73,13 @@ class Client:
 
   def render(self):
     plt.axis([0, 10, 0, 10])
-    plt.show()
     print('shown')
     while True:
       for point in self.points:
         plt.scatter(point.x, point.y, c=point.c)
       plt.pause(0.05)
-      plt.clf()
+    plt.show()
+      # plt.clf()
 
   def run(self):
     self.sock.connect((self.host, self.port))
