@@ -96,7 +96,13 @@ class Server:
       print(self.servers)
       while len(self.servers) > 0 and self.servers[0][2] != self.id:
         sock = socket.socket()
-        sock.connect((self.servers[0][0], self.servers[0][1]))
+        # sock.connect((self.servers[0][0], self.servers[0][1]))
+        try:
+          sock.connect((self.servers[0][0], self.servers[0][1]))
+        except:
+          print("FAILED. Sleep briefly & try again")
+          time.sleep(1)
+          continue
 
         while True:
           data = sock.recv(1024)
