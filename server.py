@@ -18,6 +18,7 @@ class Server:
   port = 5000
   observers = []
   servers = []
+  frames = []
   isMaster = False
   sock = socket.socket()
   # master = []
@@ -39,19 +40,25 @@ class Server:
 
   def handler(self, c, a):
     while True:
-      data = c.recv(1024)
-      if not data:
-        print('not data')
+      try:
+        data = c.recv(1024)
+        if not data:
+          print('not data')
+          self.observers.remove(c)
+          c.close()
+          break
+        received = pickle.loads(data)
+        print(received, '({} bytes)'.format(len(data)))
+        if received.header == 'registerServer':
+          self.servers.append(received.body)
+          self.notifyAll(Message('updateServers', self.servers))
+        elif received.header == 'getServers':
+          c.send(Message('updateServers', self.servers).encode())
+      except:
+        print('HANDLING ERROR')
         self.observers.remove(c)
         c.close()
         break
-      received = pickle.loads(data)
-      print(received, '({} bytes)'.format(len(data)))
-      if received.header == 'registerServer':
-        self.servers.append(received.body)
-        self.notifyAll(Message('updateServers', self.servers))
-      elif received.header == 'getServers':
-        c.send(Message('updateServers', self.servers).encode())
 
   def generatePoint(self):
     x = np.random.random()*10
@@ -69,7 +76,19 @@ class Server:
         print('point generated')
         time.sleep(1)
       print('send frame')
+      self.frames.append(points)
       self.notifyAll(Message('newFrame', points))
+
+  def updatePoints(self, sock):
+    _frames = [f for f in self.frames]
+    uThread = threading.Thread(target=self.sendAllPoints, args=(sock, _frames))
+    uThread.daemon = True
+    uThread.start()
+
+  def sendAllPoints(self, sock, frames):
+    for frame in frames:
+      time.sleep(.1)
+      sock.send(Message('newFrame', frame).encode())
 
   def run(self):
     if (not self.isMaster): # listen to MASTER updates
@@ -90,6 +109,8 @@ class Server:
           elif received.header == 'updateServers':
             self.servers = received.body
             print(self.servers)
+          elif received.header == 'newFrame':
+            self.frames.append(received.body)
         self.servers.pop(0)
 
     # start master work
@@ -110,6 +131,7 @@ class Server:
       self.observers.append(c)
       # c.send(pickle.dumps(Message('greeting', 'Hello')))
       c.send(Message('greeting', 'Hello').encode())
+      self.updatePoints(c)
       print(str(a[0]) + ':' + str(a[1]), 'connected')
       print(self.observers)
 
