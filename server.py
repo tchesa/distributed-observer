@@ -24,8 +24,8 @@ class Server:
   # master = []
   id = -1
 
-  def __init__(self, ip, port, masterHost, masterPort):
-    self.ip = ip
+  def __init__(self, host, port, masterHost, masterPort):
+    self.host = host
     self.port = port
     self.id = str(uuid.uuid1()) # based on ip and time
     if masterHost and masterPort:
