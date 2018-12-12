@@ -98,6 +98,7 @@ class Server:
         sock = socket.socket()
         # sock.connect((self.servers[0][0], self.servers[0][1]))
         try:
+          print('trying to connect to {}:{}'.format(self.servers[0][0], self.servers[0][1]))
           sock.connect((self.servers[0][0], self.servers[0][1]))
         except:
           print("FAILED. Sleep briefly & try again")
