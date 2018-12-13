@@ -51,8 +51,20 @@ class Server:
         received = pickle.loads(data)
         print(received, '({} bytes)'.format(len(data)))
         if received.header == 'registerServer':
-          self.servers.append(received.body)
-          self.notifyAll(Message('updateServers', self.servers))
+          # if not received.body in self.servers:
+          #   self.servers.append(received.body)
+          #   self.notifyAll(Message('updateServers', self.servers))
+          # else:
+          #   print('already registered')
+          found = False
+          for server in self.servers:
+            if server[0] == received.body[0] and server[1] == received.body[1]:
+              found = True
+              server[2] = received.body[2]
+              break
+          if not found:
+            self.servers.append(received.body)
+            self.notifyAll(Message('updateServers', self.servers))
         elif received.header == 'getServers':
           c.send(Message('updateServers', self.servers).encode())
       except:
@@ -102,6 +114,7 @@ class Server:
           sock.connect((self.servers[0][0], self.servers[0][1]))
         except:
           print("FAILED. Sleep briefly & try again")
+          print(self.servers)
           time.sleep(1)
           continue
 
@@ -120,6 +133,7 @@ class Server:
           elif received.header == 'newFrame':
             self.frames.append(received.body)
         self.servers.pop(0)
+        print(self.servers)
 
     # start master work
     fThread = threading.Thread(target=self.generateFrame)
